@@ -7,8 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 //REST -> Representational State Transfer
@@ -23,45 +21,47 @@ public class MyController {
 
     @GetMapping("/courses")
     public ResponseEntity<List<Courses>> getCourses(){
-        List<Courses> courses = this.courseService.getCourses();
-        if(courses.size() == 0){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        try{
+            List<Courses> coursesList = this.courseService.getCourses();
+            return ResponseEntity.status(HttpStatus.OK).body(coursesList);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
-        return ResponseEntity.of(Optional.of(courses));
     }
     @GetMapping("/courses/{courseId}")
     public ResponseEntity<Courses> getCourse(@PathVariable long courseId){
-        List<Courses> coursesList = this.courseService.getCourses().stream().filter(c -> c.getId() == courseId).collect(Collectors.toList());
-        if(coursesList.size() == 0){
+        try{
+            Courses course = this.courseService.getCourses(courseId);
+            return ResponseEntity.status(HttpStatus.OK).body(course);
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        return ResponseEntity.of(Optional.of(coursesList.get(0)));
     }
     @PostMapping("/courses")
     public ResponseEntity<Courses> addCourse(@RequestBody Courses course){
-        List<Courses> coursesList = courseService.getCourses().stream().filter(c -> c.getId() == course.getId()).toList();
-        if(coursesList.size()==1){
+        try{
+            this.courseService.addCourse(course);
+            return ResponseEntity.status(HttpStatus.CREATED).body(course);
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.ALREADY_REPORTED).build();
         }
-        this.courseService.addCourse(course);
-        return ResponseEntity.of(Optional.of(course));
     }
     @PutMapping("/courses")
     public ResponseEntity<Courses> updateCourse(@RequestBody Courses course){
-        List<Courses> coursesList = courseService.getCourses().stream().filter(c -> c.getId() == course.getId()).toList();
-        if(coursesList.size()==0){
+        try{
+            this.courseService.updateCourse(course);
+            return ResponseEntity.status(HttpStatus.CREATED).body(course);
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        this.courseService.updateCourse(course);
-        return ResponseEntity.of(Optional.of(course));
     }
     @DeleteMapping("/courses/{courseId}")
     public ResponseEntity<HttpStatus> deleteCourse(@PathVariable long courseId){
         try {
             this.courseService.deleteCourse(courseId);
-            return new ResponseEntity<>(HttpStatus.OK);
+            return ResponseEntity.status(HttpStatus.OK).build();
         } catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 }
